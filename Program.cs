@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Data;
 using System.Net.Sockets;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading;
 
 namespace TCPPortScanner
@@ -10,14 +12,19 @@ namespace TCPPortScanner
         static void Main(string[] args)
         {
             //Thread mainThread = Thread.CurrentThread;
-            Stager();           
+            string IP = "";
+            Stager(IP);
+            PortRange(IP);
+            Console.WriteLine("I'm Main!");
+            Console.ReadLine();
+            //Console.WriteLine(searchedports);
         }
-        static void Stager()
+        static string Stager(string IP)
         {
-            string IP;
             Console.WriteLine("Enter IP");
             IP = Console.ReadLine();
-            PortRange(IP);
+            return IP;
+            //PortRange(IP);
         }
         static void PortRange(string IP)
         {
@@ -29,7 +36,7 @@ namespace TCPPortScanner
             if (StartPort == "0")
             {
                 Console.WriteLine("Error, Enter a number greater than 1");
-                Stager();
+                Stager(IP);
             }
             int SPort = (int)Convert.ToInt64(StartPort);
             Console.WriteLine("Enter End Port");
@@ -38,18 +45,20 @@ namespace TCPPortScanner
             if (SPort >= EPort)
             {
                 Console.WriteLine("Error, Enter a number greater than Start Port");
-                Stager();
+                Stager(IP);
             }
             if (EPort == 0)
             {
                 Console.WriteLine("Error, Enter a number greater than 1");
-                Stager();
+                Stager(IP);
             }
+            //return (SPort, EPort, IP);
             ThreadManager(SPort, EPort, IP);
 
         }
         static void ThreadManager(int SPort, int EPort, string IP)
         {
+            test(0, 1);
             Thread thread0 = new Thread(() => LoopSend0(SPort, EPort, IP));
             Thread thread1 = new Thread(() => LoopSend1(SPort, EPort, IP));
             Thread thread2 = new Thread(() => LoopSend2(SPort, EPort, IP));
@@ -65,14 +74,14 @@ namespace TCPPortScanner
             thread3.IsBackground = true;
             thread4.Start();
             thread4.IsBackground = true;
-        }
+
+        }  
         static void LoopSend0(int portstart, int portend, string IP)
         {
             for (int testport = portstart; testport <= portend; testport = testport + 5)
             {
                 SendPacket(IP, testport);
             }
-
         }
         static void LoopSend1(int portstart, int portend, string IP)
         {
@@ -106,48 +115,75 @@ namespace TCPPortScanner
                 SendPacket(IP, testport);
             }
         }
-        static void SendPacket(string IP, int port)
+        static int SendPacket(string IP, int port)
         {
             using (TcpClient tcpClient = new TcpClient())
             {
-                bool connection;
-
+                int connection;
                 try
                 {
+                    int oport;
                     tcpClient.Connect(IP, port);
-                    Console.WriteLine($"Port {port} open");
-                    connection = true;
-                    List(connection, port);
+                    oport = port;
+                    Console.WriteLine($"Port {oport} open");
+                    connection = 2;
+                    test(oport, connection);
+                    //List(connection, port);
 
-                    tcpClient.Close();
+                    //tcpClient.Close();
+                    return oport;
 
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine($"Port {port} closed");
-                    connection = false;
-                    List(connection, port);
+                    int cport;
+                    cport = port;
+                    Console.WriteLine($"Port {cport} closed");
+                    connection = 3;
+                    test(cport, connection);
+                    //List(connection, port);
+                    return cport;
                 }             
             }
+        
         }
-        static void List(bool connection, int port)
+        static void test(int port, int connection)
         {
-
-            int i = 0;
-            if (0 == i)
+            /*
+            int startarray;
+            if (connection == 1)
             {
-                i++;
+                startarray = 2;
             }
-            if (connection == true)
+            else if (connection == 0)
             {
-               
+                startarray = 3;
             }
             else
             {
-                
+                startarray = 1;
             }
-
-
+            */
+            switch (connection)
+            {
+                case 1:
+                    int[] openports;
+                    int[] closedports;
+                    // code block                    
+                    break;
+                case 2:
+                    openports = new int[] {port};
+                    // code                 
+                    break;
+                case 3:
+                    closedports = new int[] { port };
+                    // code block
+                    break;
+                default:
+                    Console.WriteLine("Error");
+                    // code block
+                    break;
+            }
         }
 
     }
