@@ -115,7 +115,7 @@ namespace TCPPortScanner
                 SendPacket(IP, testport);
             }
         }
-        static int SendPacket(string IP, int port)
+        static void SendPacket(string IP, int port)
         {
             using (TcpClient tcpClient = new TcpClient())
             {
@@ -131,7 +131,6 @@ namespace TCPPortScanner
                     //List(connection, port);
 
                     //tcpClient.Close();
-                    return oport;
 
                 }
                 catch (Exception)
@@ -142,7 +141,6 @@ namespace TCPPortScanner
                     connection = 3;
                     test(cport, connection);
                     //List(connection, port);
-                    return cport;
                 }             
             }
         
