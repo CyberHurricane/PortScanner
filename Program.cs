@@ -1,102 +1,112 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net.Sockets;
-using System.Net;
 using System.Threading;
 
 namespace TCPPortScanner
 {
     internal class Program
     {
+        static List<int> openPorts = new List<int>();  // List to store open ports
+        static List<int> closedPorts = new List<int>(); // List to store closed ports
+
         static void Main(string[] args)
         {
-            Thread mainThread = Thread.CurrentThread;
-            Stager();
-            Console.ReadLine();
-        }
-        static void Stager()
-        {
             string IP;
-            Console.WriteLine("Enter IP");
+            Console.WriteLine("Enter IP:");
             IP = Console.ReadLine();
             PortRange(IP);
+            Console.ReadLine();
         }
         static void PortRange(string IP)
         {
-            string StartPort;
-            string EndPort;
+            Console.WriteLine("Enter Start Port:");
+            int startPort = Convert.ToInt32(Console.ReadLine());
 
-            Console.WriteLine("Enter Start Port");
-            StartPort = Console.ReadLine();
-            if (StartPort == "0")
+            if (startPort <= 0)
             {
-                Console.WriteLine("Error, Enter a number greater than 1");
-                Stager();
-            }
-            int SPort = (int)Convert.ToInt64(StartPort);
-            Console.WriteLine("Enter End Port");
-            EndPort = Console.ReadLine();
-            int EPort = (int)Convert.ToInt64(EndPort);
-            Thread thread1 = new Thread(() => LoopSend(SPort, EPort, IP));
-            Thread thread2 = new Thread(() => LoopSend2(SPort, EPort, IP));
-            Thread thread3 = new Thread(() => LoopSend3(SPort, EPort, IP));
-            Thread thread4 = new Thread(() => LoopSend4(SPort, EPort, IP));
-            thread1.Start();
-            thread2.Start();
-            thread3.Start();
-            thread4.Start();
-        }
-        static void LoopSend(int portstart, int portend, string IP)
-        {
-            for (int testport = portstart + 1; testport <= portend; testport = testport + 4)
-            {
-                SendPacket(IP, testport);
+                Console.WriteLine("Error: Enter a number greater than 0");
+                PortRange(IP); // Restart function if input is invalid
+                return;
             }
 
-        }
-        static void LoopSend2(int portstart, int portend, string IP)
-        {
-            Thread.Sleep(300);
-            for (int testport = portstart + 2; testport <= portend; testport = testport + 4)
+            Console.WriteLine("Enter End Port:");
+            int endPort = Convert.ToInt32(Console.ReadLine());
+
+            if (endPort <= startPort)
             {
-                SendPacket(IP, testport);
+                Console.WriteLine("Error: End Port must be greater than Start Port");
+                PortRange(IP); // Restart function if input is invalid
+                return;
+            }
+            ThreadManager(startPort, endPort, IP);
+        }
+        static void ThreadManager(int startPort, int endPort, string IP)
+        {
+            Thread[] threads = new Thread[10];
+            for (int i = 0; i < 10; i++)
+            {
+                int threadStartPort = startPort + i;
+                threads[i] = new Thread(() => LoopSend(threadStartPort, endPort, IP));
+                threads[i].Start();
+            }
+
+            foreach (Thread thread in threads)
+            {
+                thread.Join(); // Wait for all threads to complete
+            }
+
+            openPorts.Sort();
+            Console.WriteLine("\nOpen Ports:");
+            foreach (var port in openPorts)
+            {
+                Console.WriteLine(port);
+            }
+
+            closedPorts.Sort();
+            Console.WriteLine("\nClosed Ports:");
+            foreach (var port in closedPorts)
+            {
+                Console.WriteLine(port);
             }
         }
-        static void LoopSend3(int portstart, int portend, string IP)
+        static void LoopSend(int startPort, int endPort, string IP)
         {
-            Thread.Sleep(600);
-            for (int testport = portstart + 3; testport <= portend; testport = testport + 4)
+            for (int testPort = startPort; testPort <= endPort; testPort += 10)
             {
-                SendPacket(IP, testport);
-            }
-        }
-        static void LoopSend4(int portstart, int portend, string IP)
-        {
-            Thread.Sleep(900);
-            for (int testport = portstart + 4; testport <= portend; testport = testport + 4)
-            {
-                SendPacket(IP, testport);
+                SendPacket(IP, testPort);
             }
         }
         static void SendPacket(string IP, int port)
         {
-            using (TcpClient tcpClient = new TcpClient())
+            try
             {
-                try
+                using (TcpClient tcpClient = new TcpClient())
                 {
-                    tcpClient.Connect(IP, port);                   
-                    Console.WriteLine($"Port {port} open");
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine($"Port {port} closed");
+                    Console.WriteLine($"Sending Packets to {IP} On Port {port}");
+                    tcpClient.Connect(IP, port);
+                    AddToOpenPorts(port);
                 }
             }
+            catch (Exception)
+            {
+                AddToClosedPorts(port);
+            }
         }
+        static void AddToOpenPorts(int port)
+        {
+            lock (openPorts)  
+            {
+                openPorts.Add(port);
+            }
+        }
+        static void AddToClosedPorts(int port)
+        {
+            lock (closedPorts)
+            {
+                closedPorts.Add(port);
 
-
+            }
+        }
     }
 }
