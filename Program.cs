@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace TCPPortScanner
 {
-    internal class Program
+    internal class TCPPortScanner
     {
         static List<int> openPorts = new List<int>();  // List to store open ports
         static List<int> closedPorts = new List<int>(); // List to store closed ports
