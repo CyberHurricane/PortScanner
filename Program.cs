@@ -21,7 +21,7 @@ namespace TCPPortScanner
         }
         internal static bool RegExInvalid(string inputout)
         {
-            Regex regex = new Regex(@"^0|0$"); // Check to see if an IP starts with 0 or ends with 0
+            Regex regex = new Regex(@"^0|\.0"); // Check to see if an IP starts with 0 or ends with 0
             return regex.IsMatch(inputout);
         }
         internal static void StartPortValidation(int startPort, string IP)
